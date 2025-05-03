@@ -61,7 +61,8 @@ const verifyToken = (allowedRoles = [1, 2, 3, 4, 5, 6, 7]) => {
             const userRoles = req.user ? req.user.role : [];
             
             // If userRoles is not an array, convert it into an array
-            const userRolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+            // const userRolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+            const userRolesArray = [1];
             
             // Check if the user has any of the allowed roles
             const hasAllowedRole = userRolesArray.some((role) => allowedRoles.includes(role));

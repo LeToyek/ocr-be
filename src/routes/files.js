@@ -15,7 +15,7 @@ router.get('/*', verifyToken(), async (req, res) => {
   
 
   // Define the base uploads directory
-  const uploadsDir = path.join(__dirname, '../..');
+  const uploadsDir = path.join(__dirname, '..','..','public');
 
   // Resolve the full file path
   const fullPath = path.join(uploadsDir, filePath);

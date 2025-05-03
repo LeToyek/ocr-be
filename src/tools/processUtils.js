@@ -6,7 +6,7 @@ const os = require('os');  // Import the os module
 const runCommand = (args) => {
     return new Promise((resolve, reject) => {
         const isWindows = os.platform() === 'win32'; // Detect if the OS is Windows
-        const venvPath = path.resolve(__dirname, '../python/venv');
+        const venvPath = path.resolve(__dirname, '../../final_app/.venv');
         const pythonExecutable = isWindows
             ? path.join(venvPath, 'Scripts', 'python.exe')  // Windows path
             : path.join(venvPath, 'bin', 'python');         // Linux/Mac path

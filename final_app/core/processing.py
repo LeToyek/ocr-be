@@ -48,7 +48,6 @@ def process_image(image_path: str):
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     area = (x2 - x1) * (y2 - y1)
                     name = model.names[int(box.cls)]
-                    print("box.clsSSSSSSSSSSSSSSSs",name)
                     if area > max_area and name.upper() in valid_categories:
                         max_area = area
                         largest_detection = {
@@ -57,7 +56,6 @@ def process_image(image_path: str):
                             'area': area
                         }
         
-            print("Largest detectionNNNNNNNNNNNNN: ", largest_detection)
             if largest_detection:
                 # Use the uppercase version for logging consistency if desired
                 log.info(f"Largest object found: {largest_detection['class_name'].upper()} (Area: {largest_detection['area']})")

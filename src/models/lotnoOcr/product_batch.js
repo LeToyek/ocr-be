@@ -1,25 +1,17 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('ocr_results', {
+  return sequelize.define('product_batch', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    employee_id: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      references: {
-        model: 'aio_employee',
-        key: 'lg_nik'
-      }
-    },
-    product_batch_id: {
+    document_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'product_batch',
+        model: 'documents',
         key: 'id'
       }
     },
@@ -31,12 +23,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    top_similarity: {
-      type: DataTypes.FLOAT,
-      allowNull: true
-    },
-    bottom_similarity: {
-      type: DataTypes.FLOAT,
+    is_verified: {
+      type: DataTypes.BOOLEAN,
       allowNull: true
     },
     created_at: {
@@ -49,7 +37,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'ocr_results',
+    tableName: 'product_batch',
     timestamps: false,
     underscored: true,
     indexes: [
@@ -62,17 +50,10 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "employee_id",
+        name: "document_id",
         using: "BTREE",
         fields: [
-          { name: "employee_id" },
-        ]
-      },
-      {
-        name: "product_batch_id",
-        using: "BTREE",
-        fields: [
-          { name: "product_batch_id" },
+          { name: "document_id" },
         ]
       },
     ]
