@@ -1,0 +1,41 @@
+[
+    {
+        "function": "Grayscale",
+        "params": {}
+    },
+    {
+        "function": "Bilateral Filtered Image",
+        "params": {
+            "d": 7,
+            "sigmaColor": 145,
+            "sigmaSpace": 168
+        }
+    },
+    {
+        "function": "Convert Scale Abs",
+        "params": {
+            "alpha": 0.68,
+            "beta": 62
+        }
+    },
+    {
+        "function": "Adaptive Threshold",
+        "params": {
+            "block_size": 11,
+            "C": 2,
+            "thresh_type": 1
+        }
+    },
+    {
+        "function": "Morphological Opening",
+        "params": {
+            "kernel_size": 3
+        }
+    },
+    {
+        "function": "Morphological Closing",
+        "params": {
+            "kernel_size": 3
+        }
+    }
+]

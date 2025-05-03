@@ -1,0 +1,13 @@
+# Required packages for the OCR Lot No Final Application
+
+# Core OCR and Image Processing
+easyocr
+numpy
+opencv-python
+ultralytics
+
+# Data Handling and Output
+pandas
+
+# Optional Statistics Plotting
+matplotlib
