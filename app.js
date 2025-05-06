@@ -54,8 +54,7 @@ const corsOptions = {
       'http://192.168.214.231:4200',
       'http://192.168.18.9:4200',
       'http://192.168.18.9',
-      
-    //   "localhost:4200"
+      'https://lotno.molana.my.id'
     ];
 
     if (!origin || allowedOrigins.includes(origin)) {
