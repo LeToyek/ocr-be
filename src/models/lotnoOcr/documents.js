@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('documents', {
+  // Define the model
+  const documents = sequelize.define('documents', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
@@ -9,7 +10,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     category_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: false, // Assuming category_id is required
       references: {
         model: 'category',
         key: 'id'
@@ -46,7 +47,7 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "product_id",
+        name: "category_id", // Corrected index name if it refers to category_id
         using: "BTREE",
         fields: [
           { name: "category_id" },
@@ -54,4 +55,20 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Add the associate method
+  documents.associate = function(models) {
+    // Document belongs to a Category
+    documents.belongsTo(models.category, {
+      foreignKey: 'category_id', // The foreign key in this table
+      as: 'category' // Alias for the association
+    });
+    // Document has many ProductBatches
+    documents.hasMany(models.product_batch, {
+      foreignKey: 'document_id', // The foreign key in the product_batch table
+      as: 'product_batches' // Alias for the association
+    });
+  };
+
+  return documents; // Return the defined model
 };

@@ -22,3 +22,4 @@ yarn.lock
 *.sln
 .npmrc
 .yarnrc
+/public

@@ -10,5 +10,7 @@ const { verifyToken } = require('../middlewares/authMiddleware'); // Assuming mi
 // The verifyToken middleware runs first to ensure the user is authenticated.
 // The controller.uploadPhoto function handles the multer middleware internally.
 router.post('/', verifyToken(), controller.scanPhoto);
+router.post('/test', verifyToken(), controller.scanPhotoTest);
+
 
 module.exports = router;

@@ -18,6 +18,8 @@ function initModels(sequelize) {
   category.hasMany(documents, { as: "documents", foreignKey: "category_id"});
   product_batch.belongsTo(documents, { as: "document", foreignKey: "document_id"});
   documents.hasMany(product_batch, { as: "product_batches", foreignKey: "document_id"});
+  product_batch.belongsTo(ocr_results, { as: "ocr_result_ocr_result", foreignKey: "ocr_result_id"});
+  ocr_results.hasMany(product_batch, { as: "ocr_result_product_batches", foreignKey: "ocr_result_id"});
   ocr_results.belongsTo(product_batch, { as: "product_batch", foreignKey: "product_batch_id"});
   product_batch.hasMany(ocr_results, { as: "ocr_results", foreignKey: "product_batch_id"});
 

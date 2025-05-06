@@ -6,8 +6,8 @@ const { ocr_results, aio_employee, product_batch } = db.lotnoOcr; // Destructure
 exports.createOcrResult = async (req, res) => {
     try {
         // employee_id might come from logged-in user (req.user.id) instead of body
-        const employee_id = req.user.id; // Assuming verifyToken adds user info to req
-        const { product_batch_id, top_text, bottom_text, top_similarity, bottom_similarity } = req.body;
+        const employee_id = req.user.lg_nik; // Assuming verifyToken adds user info to req
+        const { product_batch_id, top_text, bottom_text } = req.body;
 
         if (!employee_id || product_batch_id === undefined) {
              return response(req, res, { status: 400, message: "Employee ID and Product Batch ID are required." });
@@ -24,8 +24,7 @@ exports.createOcrResult = async (req, res) => {
             product_batch_id,
             top_text,
             bottom_text,
-            top_similarity,
-            bottom_similarity
+            photo_url
         });
         response(req, res, { status: 201, data: newResult, message: "OCR result created successfully." });
     } catch (error) {

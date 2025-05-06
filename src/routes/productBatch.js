@@ -9,6 +9,7 @@ router.use(verifyToken()); // Protect all product batch routes
 
 router.post('/', controller.createProductBatch);
 router.get('/', controller.getAllProductBatches);
+router.get('/available', controller.getAvailableProductBatches);
 router.get('/:id', controller.getProductBatchById);
 router.put('/:id', controller.updateProductBatch);
 router.delete('/:id', controller.deleteProductBatch);
