@@ -33,7 +33,8 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config app.js dotenv_config_path=./env/.env.dev",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "models": "node ./config/sequelizeAuto.js"
+    "models": "node ./config/sequelizeAuto.js",
+    "start": "node -r dotenv/config app.js dotenv_config_path=./env/.env.dev"
   },
   "repository": {
     "type": "git",
