@@ -23,3 +23,11 @@ yarn.lock
 .npmrc
 .yarnrc
 /public
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+/__pycache__
