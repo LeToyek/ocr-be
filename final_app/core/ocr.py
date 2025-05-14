@@ -215,3 +215,68 @@ def split_text_top_bottom(ocr_results: list, image_height: int) -> dict:
     }
     log.info(f"Split text results: Top='{final_result['top_text']}', Bottom='{final_result['bottom_text']}'")
     return final_result
+
+
+def draw_ocr_results(image: np.ndarray, results: list) -> np.ndarray:
+    """
+    Draws bounding boxes and text from OCR results onto an image.
+
+    Args:
+        image (np.ndarray): The input image (BGR format).
+        results (list): A list of dictionaries, where each dictionary contains
+                        at least 'box' (list of 4 points [tl, tr, br, bl])
+                        and 'text' (string).
+
+    Returns:
+        np.ndarray: A copy of the image with OCR results drawn on it.
+    """
+    output_image = image.copy()
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    text_color = (0, 255, 0) # Green
+    box_color = (0, 0, 255) # Red
+    thickness = 1
+
+    if not results:
+        log.warning("No OCR results provided to draw.")
+        return output_image
+
+    for item in results:
+        try:
+            # Extract box and text
+            box = item.get('box')
+            text = item.get('text', '')
+
+            if box is None:
+                log.warning(f"Skipping item due to missing 'box': {item}")
+                continue
+
+            # Ensure box is in the expected format (list of 4 points)
+            if not isinstance(box, list) or len(box) != 4:
+                 # Handle potential EasyOCR format (list of lists) or other formats
+                 if isinstance(box, list) and len(box) > 0 and isinstance(box[0], list) and len(box[0]) == 2:
+                     # Assuming [[x1,y1],[x2,y1],[x2,y2],[x1,y2]] format from EasyOCR
+                     pts = np.array(box, dtype=np.int32)
+                 elif isinstance(box, list) and len(box) == 4 and all(isinstance(p, (int, float)) for p in box):
+                     # Assuming [x_min, y_min, x_max, y_max] format from YOLO? Adjust if needed.
+                     x_min, y_min, x_max, y_max = map(int, box)
+                     pts = np.array([[x_min, y_min], [x_max, y_min], [x_max, y_max], [x_min, y_max]], dtype=np.int32)
+                 else:
+                     log.warning(f"Skipping item due to unexpected 'box' format: {box}")
+                     continue
+            else:
+                 # Assuming the format is already list of 4 points [[x,y], [x,y], [x,y], [x,y]]
+                 pts = np.array(box, dtype=np.int32)
+
+
+            # Draw the bounding box polygon
+            cv2.polylines(output_image, [pts], isClosed=True, color=box_color, thickness=thickness)
+
+            # Put the recognized text near the top-left corner of the box
+            text_position = (pts[0][0], pts[0][1] - 5) # Position text slightly above the top-left corner
+            cv2.putText(output_image, text, text_position, font, font_scale, text_color, thickness, cv2.LINE_AA)
+
+        except Exception as e:
+            log.error(f"Error drawing result item {item}: {e}", exc_info=True)
+
+    return output_image

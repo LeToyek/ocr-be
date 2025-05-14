@@ -1,6 +1,7 @@
 # core/detection.py
 from ultralytics import YOLO
 from utils.logger import log
+import numpy as np
 import cv2
 import os # Import os to construct the path relative to this file if needed, or use absolute path
 
@@ -63,3 +64,38 @@ def detect_objects(image_path: str):
     except Exception as e:
         log.error(f"An error occurred during YOLO detection: {e}")
         return None, None
+
+def detect_objects_by_image(image):
+    """
+    Performs object detection on the given image using the loaded YOLO model.
+
+    Args:
+        image_path (str): The path to the image file.
+
+    Returns:
+        tuple: A tuple containing:
+            - results: The detection results from the YOLO model.
+            - image: The loaded image (NumPy array).
+        Returns (None, None) if the model isn't loaded or the image can't be read.
+    """
+    if model is None:
+        log.error("YOLO model is not loaded or failed to load. Cannot perform detection.")
+        return None, None
+
+    try:
+        # Read the image using OpenCV
+        img = image
+        if img is None:
+            return None, None
+
+        # Perform detection
+        results = model(img) # Pass the loaded image (NumPy array) to the model
+        log.info(f"Detection complete. Found {len(results[0].boxes)} potential objects.") # Example for ultralytics results
+
+        return results, img,model
+
+    except Exception as e:
+        log.error(f"An error occurred during YOLO detection: {e}")
+        return None, None
+
+

@@ -75,31 +75,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// app.use(cors())
-// app.use(function (req, res, next) {
-//     //Enabling CORS
-//     res.header("Access-Control-Allow-Origin", "*");
-//     res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
-//       next();
-//     });
 
-// Make CSRF token available to Angular app
-// app.use((req, res, next) => {
-//   res.cookie('XSRF-TOKEN', req.csrfToken());
-//   next();
-// });
-
-// Other Middlewares...
-
-// Custom middleware to add timestamps
-app.use((req, res, next) => {
-  req.customDate = moment().format("DD MMM YYYY HH:mm:ss");
-  req.customTime = moment().format("HH:mm:ss").toUpperCase();
-  req.customTimestamp = moment().format("YYYY-MM-DD HH:mm:ss").toUpperCase();
-  req.startTime = new Date().getTime();
-  next();
-});
+// Add static file serving before the routes
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Routes registration
 const routesDir = path.join(__dirname, "./src/routes");

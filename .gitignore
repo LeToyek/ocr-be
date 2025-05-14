@@ -25,9 +25,6 @@ yarn.lock
 /public
 
 # Python cache files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*$py.class
-*.pyc
-
-/__pycache__
