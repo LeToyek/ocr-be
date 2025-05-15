@@ -6,7 +6,10 @@ import os
 from utils.logger import log
 
 # --- Configuration for Preset Paths ---
-PRESET_BASE_PATH = r".\assets\pipeline_presets"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+PRESET_BASE_PATH = os.path.join(PROJECT_ROOT, 'assets','pipeline_presets')
+# PRESET_BASE_PATH = r".\assets\pipeline_presets"
 PRESET_FILES = {
     "CAP": os.path.join(PRESET_BASE_PATH, "morphed pipeline.json"),
     "BOX": os.path.join(PRESET_BASE_PATH, "final_lotno_box_preproc (used).json"),

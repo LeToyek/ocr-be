@@ -24,7 +24,11 @@ except Exception as e:
 # --- YOLO OCR Model Initialization (Placeholder) ---
 # TODO: Implement loading and inference for your CAP YOLO character model
 # This will be similar to core/detection.py but for a different model
-CAP_OCR_MODEL_PATH = r".\assets\models\cap_character_model.pt" # <<< IMPORTANT: Replace with your CAP character model path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+YOLO_MODEL_FOLDER = os.path.join(PROJECT_ROOT, 'assets','models')
+# CAP_OCR_MODEL_PATH = r".\assets\models\cap_character_model.pt" # <<< IMPORTANT: Replace with your CAP character model path
+CAP_OCR_MODEL_PATH = os.path.join(YOLO_MODEL_FOLDER, 'cap_character_model.pt') # <<< IMPORTANT: Replace with your CAP character model path
 CAP_OCR_MODEL = None
 CAP_OCR_AVAILABLE = False
 try:
