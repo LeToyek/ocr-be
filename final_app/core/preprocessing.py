@@ -6,7 +6,7 @@ import os
 from utils.logger import log
 
 # --- Configuration for Preset Paths ---
-PRESET_BASE_PATH = r"d:\SKRIPSI\CODE\ocr-lotno-model\final_app\assets\pipeline_presets"
+PRESET_BASE_PATH = r".\assets\pipeline_presets"
 PRESET_FILES = {
     "CAP": os.path.join(PRESET_BASE_PATH, "morphed pipeline.json"),
     "BOX": os.path.join(PRESET_BASE_PATH, "final_lotno_box_preproc (used).json"),

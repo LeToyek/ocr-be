@@ -24,7 +24,7 @@ except Exception as e:
 # --- YOLO OCR Model Initialization (Placeholder) ---
 # TODO: Implement loading and inference for your CAP YOLO character model
 # This will be similar to core/detection.py but for a different model
-CAP_OCR_MODEL_PATH = r"d:\SKRIPSI\CODE\ocr-lotno-model\final_app\assets\models\cap_character_model.pt" # <<< IMPORTANT: Replace with your CAP character model path
+CAP_OCR_MODEL_PATH = r".\assets\models\cap_character_model.pt" # <<< IMPORTANT: Replace with your CAP character model path
 CAP_OCR_MODEL = None
 CAP_OCR_AVAILABLE = False
 try:
