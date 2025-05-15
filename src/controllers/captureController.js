@@ -115,6 +115,8 @@ exports.scanPhoto = (req, res) => {
                         // A safer approach might involve more complex regex or specific handling if needed
                         // This simple replace works if keys and string values don't contain single quotes themselves
                         const jsonString = jsonLikeString.replace(/'/g, '"');
+                        console.log("jsonString : ", jsonString);
+                        
 
                         parsedOutput = JSON.parse(jsonString);
                         console.log("Parsed Python script output:", parsedOutput);
