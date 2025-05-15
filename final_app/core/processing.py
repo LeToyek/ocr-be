@@ -13,7 +13,7 @@ def process_image(image_path: str):
         log.error("No image path provided.")
         return
 
-    log.info(f"Starting image processing for: {image_path}")
+    # log.info(f"Starting image processing for: {image_path}")
 
     final_ocr_result = "N/A" # Default result if processing fails
 
@@ -58,7 +58,7 @@ def process_image(image_path: str):
         
             if largest_detection:
                 # Use the uppercase version for logging consistency if desired
-                log.info(f"Largest object found: {largest_detection['class_name'].upper()} (Area: {largest_detection['area']})")
+                # log.info(f"Largest object found: {largest_detection['class_name'].upper()} (Area: {largest_detection['area']})")
 
                 # --- Step 3: Crop the image based on the largest bounding box ---
                 x1, y1, x2, y2 = largest_detection['bbox']
