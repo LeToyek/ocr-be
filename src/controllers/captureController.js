@@ -97,7 +97,7 @@ exports.scanPhoto = (req, res) => {
 
             // Attempt to parse the specific output format
             let parsedOutput;
-            const resultPrefix = "Final Result: ";
+            const resultPrefix = "Processing Result: ";
             try {
                 // Find the start of the dictionary after the prefix
                 const dictStartIndex = scriptOutput.indexOf(resultPrefix);

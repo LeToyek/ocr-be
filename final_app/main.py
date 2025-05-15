@@ -15,6 +15,7 @@ def main():
     )
 
     args = parser.parse_args()
+    log.disabled = True
     log.info("Application started.")
     log.debug(f"Arguments received: {args}")
 
