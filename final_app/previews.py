@@ -32,7 +32,7 @@ def main():
                             cols = st.columns(3)
                             for idx, file in enumerate(files):
                                 with cols[idx % 3]:
-                                    image_url = f"http://{BE_URL}{file['path']}"
+                                    image_url = f"{BE_URL}{file['path']}"
                                     st.image(image_url, caption=file['name'], use_container_width=True)
                                     st.write(f"Size: {file['size']/1024:.2f} KB")
                                     st.write(f"Modified: {format_datetime(file['modified'])}")
