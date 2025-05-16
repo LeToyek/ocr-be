@@ -13,3 +13,5 @@ pandas
 matplotlib
 
 streamlit
+
+python-dotenv

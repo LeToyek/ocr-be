@@ -69,8 +69,8 @@ def run_ocr_pipeline(image: np.ndarray, category: str, image_path: str = None) -
 
         # Step 2: Character Extraction (currently pass-through)
         image_for_ocr = pipeline[1](preprocessed_image, category)
-        if output_dir:
-            cv2.imwrite(os.path.join(output_dir, "03_extraction.jpg"), image_for_ocr)
+        # if output_dir:
+        #     cv2.imwrite(os.path.join(output_dir, "03_extraction.jpg"), image_for_ocr)
 
         # Step 3: Perform OCR using the category-specific function
         ocr_function = pipeline[2]
@@ -85,7 +85,7 @@ def run_ocr_pipeline(image: np.ndarray, category: str, image_path: str = None) -
             try:
                 # Draw boxes and save
                 image_with_boxes = draw_ocr_results(image_for_ocr.copy(), ocr_results)
-                cv2.imwrite(os.path.join(output_dir, "04_ocr_results.jpg"), image_with_boxes)
+                cv2.imwrite(os.path.join(output_dir, "03_ocr_results.jpg"), image_with_boxes)
             except Exception as e:
                 log.error(f"Error drawing or saving OCR results: {e}", exc_info=True)
 
