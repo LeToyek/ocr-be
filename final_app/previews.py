@@ -16,7 +16,7 @@ def main():
     st.title('OCR Results Viewer')
     
     try:
-        response = requests.get(f'http://{BE_URL}/api/folder')
+        response = requests.get(f'{BE_URL}/api/folder')
         if response.status_code == 200:
             data = response.json()
             
