@@ -65,38 +65,36 @@ def perform_easyocr(image: np.ndarray) -> list:
     log.info("Performing OCR using EasyOCR...")
     try:
         # EasyOCR works best with BGR images, ensure input format if needed
-        # It expects HWC format
         results = reader.readtext(image)
-        # Format results slightly for consistency: [[x1,y1,x2,y2], text, conf]
+        # Format results slightly for consistency
         formatted_results = []
+        
+        # Debug the raw results
+        log.debug(f"Raw EasyOCR results: {results}")
+        
         for (bbox, text, prob) in results:
             # bbox is [[tl_x, tl_y], [tr_x, tr_y], [br_x, br_y], [bl_x, bl_y]]
-            # Convert to simple [x_min, y_min, x_max, y_max]
+            # Keep the original polygon format for drawing
+            # Also add a simplified box format for text splitting
             x_coords = [p[0] for p in bbox]
             y_coords = [p[1] for p in bbox]
-            box = [min(x_coords), min(y_coords), max(x_coords), max(y_coords)]
-
-            # # --- Text Cleaning Start ---
-            # # 1. Filter out non-alphanumeric characters
-            # cleaned_text = re.sub(r'[^a-zA-Z0-9]', '', text)
-
-            # # 2. Convert to uppercase for consistent substitution
-            # cleaned_text_upper = cleaned_text.upper()
-
-            # # 3. Perform substitutions: O -> 0, I -> 1
-            # cleaned_text_final = cleaned_text_upper.replace('O', '0').replace('I', '1')
+            simple_box = [min(x_coords), min(y_coords), max(x_coords), max(y_coords)]
+            
             cleaned_text_final = text
-            # # --- Text Cleaning End ---
-
+            
             # Only add if the cleaned text is not empty
             if cleaned_text_final:
-                formatted_results.append({'box': box, 'text': cleaned_text_final, 'confidence': prob})
-                log.debug(f"EasyOCR detected: '{text}' -> Cleaned: '{cleaned_text_final}' (Conf: {prob:.2f}) at {box}")
+                formatted_results.append({
+                    'box': simple_box,  # For text splitting
+                    'bbox': bbox,       # Original polygon for drawing
+                    'text': cleaned_text_final, 
+                    'confidence': prob
+                })
+                log.debug(f"EasyOCR detected: '{text}' at box={simple_box}, bbox={bbox}")
             else:
-                log.debug(f"EasyOCR detected: '{text}' -> Discarded after cleaning (Conf: {prob:.2f}) at {box}")
+                log.debug(f"EasyOCR detected: '{text}' -> Discarded after cleaning")
 
-
-        log.info(f"EasyOCR finished. Found {len(formatted_results)} valid text blocks after cleaning.")
+        log.info(f"EasyOCR finished. Found {len(formatted_results)} valid text blocks.")
         return formatted_results
     except Exception as e:
         log.error(f"Error during EasyOCR execution: {e}", exc_info=True)
@@ -135,12 +133,11 @@ def perform_cap_ocr_yolo(image: np.ndarray) -> list:
 
         formatted_results = []
 
-        # Process YOLO results (assuming results is a list or similar iterable)
+        # Process YOLO results
         if results:
-             # Assuming the first element contains the detections for the single image
             yolo_result_obj = results[0]
             boxes = yolo_result_obj.boxes
-            if boxes: # Check if any boxes were detected
+            if boxes:
                 for box in boxes:
                     # Get bounding box coordinates [x1, y1, x2, y2]
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
@@ -150,15 +147,23 @@ def perform_cap_ocr_yolo(image: np.ndarray) -> list:
 
                     # Get class name (character)
                     class_id = int(box.cls[0].item())
-                    # Ensure class_id is valid for the model's names list
                     if class_id < len(yolo_result_obj.names):
-                         char = yolo_result_obj.names[class_id]
+                        char = yolo_result_obj.names[class_id]
                     else:
-                         log.warning(f"Detected class_id {class_id} is out of bounds for model names.")
-                         char = "?" # Assign a placeholder if class_id is invalid
+                        log.warning(f"Detected class_id {class_id} is out of bounds for model names.")
+                        char = "?"
 
-                    formatted_results.append({'box': [x1, y1, x2, y2], 'text': char, 'confidence': confidence})
-                    log.debug(f"CAP YOLO OCR detected: '{char}' (Conf: {confidence:.2f}) at {[x1, y1, x2, y2]}")
+                    # Create both box and bbox formats for consistency
+                    simple_box = [x1, y1, x2, y2]
+                    polygon_bbox = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]  # Convert to polygon format
+                    
+                    formatted_results.append({
+                        'box': simple_box,
+                        'bbox': polygon_bbox,  # Add polygon format for drawing
+                        'text': char, 
+                        'confidence': confidence
+                    })
+                    log.debug(f"CAP YOLO OCR detected: '{char}' at box={simple_box}, bbox={polygon_bbox}")
             else:
                 log.info("No character boxes detected by CAP YOLO model in this image.")
         else:
@@ -218,69 +223,87 @@ def split_text_top_bottom(ocr_results: list, image_height: int) -> dict:
         'bottom_text': " ".join(bottom_texts)
     }
     log.info(f"Split text results: Top='{final_result['top_text']}', Bottom='{final_result['bottom_text']}'")
+    log.info(f"Split text resultsssssssssssssss: Top='{final_result['top_text']}'")
     return final_result
 
 
 def draw_ocr_results(image: np.ndarray, results: list) -> np.ndarray:
     """
     Draws bounding boxes and text from OCR results onto an image.
-
-    Args:
-        image (np.ndarray): The input image (BGR format).
-        results (list): A list of dictionaries, where each dictionary contains
-                        at least 'box' (list of 4 points [tl, tr, br, bl])
-                        and 'text' (string).
-
-    Returns:
-        np.ndarray: A copy of the image with OCR results drawn on it.
     """
+    # Make a copy and ensure it's in color format (BGR)
+    if image is None:
+        log.error("Input image is None")
+        return np.zeros((300, 300, 3), dtype=np.uint8)
+        
     output_image = image.copy()
+    
+    # Ensure image is in color format for visible boxes
+    if len(output_image.shape) == 2:  # If grayscale
+        output_image = cv2.cvtColor(output_image, cv2.COLOR_GRAY2BGR)
+    
+    h, w = output_image.shape[:2]
+    
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5
-    text_color = (0, 255, 0) # Green
-    box_color = (0, 0, 255) # Red
-    thickness = 1
-
-    if not results:
-        log.warning("No OCR results provided to draw.")
-        return output_image
-
-    for item in results:
+    font_scale = 0.7
+    text_color = (0, 255, 0)  # Green
+    box_color = (0, 0, 255)   # Red - more visible
+    thickness = 2
+    
+    log.debug(f"Drawing boxes for {len(results)} OCR results")
+    
+    for i, item in enumerate(results):
         try:
-            # Extract box and text
-            box = item.get('box')
             text = item.get('text', '')
-
-            if box is None:
-                log.warning(f"Skipping item due to missing 'box': {item}")
-                continue
-
-            # Ensure box is in the expected format (list of 4 points)
-            if not isinstance(box, list) or len(box) != 4:
-                 # Handle potential EasyOCR format (list of lists) or other formats
-                 if isinstance(box, list) and len(box) > 0 and isinstance(box[0], list) and len(box[0]) == 2:
-                     # Assuming [[x1,y1],[x2,y1],[x2,y2],[x1,y2]] format from EasyOCR
-                     pts = np.array(box, dtype=np.int32)
-                 elif isinstance(box, list) and len(box) == 4 and all(isinstance(p, (int, float)) for p in box):
-                     # Assuming [x_min, y_min, x_max, y_max] format from YOLO? Adjust if needed.
-                     x_min, y_min, x_max, y_max = map(int, box)
-                     pts = np.array([[x_min, y_min], [x_max, y_min], [x_max, y_max], [x_min, y_max]], dtype=np.int32)
-                 else:
-                     log.warning(f"Skipping item due to unexpected 'box' format: {box}")
-                     continue
+            
+            # First try to use bbox (polygon format) if available
+            if 'bbox' in item and item['bbox'] is not None:
+                bbox = item['bbox']
+                log.debug(f"Drawing polygon bbox for item {i}: {bbox}")
+                
+                # Convert to numpy array for drawing
+                pts = np.array(bbox, dtype=np.int32)
+                
+                # Draw the polygon
+                cv2.polylines(output_image, [pts], isClosed=True, color=box_color, thickness=thickness)
+                
+                # Add text near the top-left corner
+                text_x, text_y = bbox[0]
+                text_y = max(text_y - 10, 10)  # Position text above the box
+                cv2.putText(output_image, text, (int(text_x), int(text_y)), 
+                            font, font_scale, text_color, thickness)
+            
+            # Fall back to box format if bbox not available
+            elif 'box' in item and item['box'] is not None:
+                box = item['box']
+                log.debug(f"Drawing rectangle box for item {i}: {box}")
+                
+                # Ensure we have 4 coordinates
+                if len(box) == 4:
+                    x_min, y_min, x_max, y_max = map(int, box)
+                    
+                    # Ensure coordinates are within image boundaries
+                    x_min = max(0, min(x_min, w-1))
+                    y_min = max(0, min(y_min, h-1))
+                    x_max = max(0, min(x_max, w-1))
+                    y_max = max(0, min(y_max, h-1))
+                    
+                    # Draw the rectangle
+                    cv2.rectangle(output_image, (x_min, y_min), (x_max, y_max), 
+                                 box_color, thickness)
+                    
+                    # Add text above the box
+                    text_y = max(y_min - 10, 10)  # Position text above the box
+                    cv2.putText(output_image, text, (x_min, text_y), 
+                                font, font_scale, text_color, thickness)
             else:
-                 # Assuming the format is already list of 4 points [[x,y], [x,y], [x,y], [x,y]]
-                 pts = np.array(box, dtype=np.int32)
-
-
-            # Draw the bounding box polygon
-            cv2.polylines(output_image, [pts], isClosed=True, color=box_color, thickness=thickness)
-
-            # Put the recognized text near the top-left corner of the box
-            text_position = (pts[0][0], pts[0][1] - 5) # Position text slightly above the top-left corner
-            cv2.putText(output_image, text, text_position, font, font_scale, text_color, thickness, cv2.LINE_AA)
-
+                log.warning(f"No valid box format found for item {i}")
+        
         except Exception as e:
-            log.error(f"Error drawing result item {item}: {e}", exc_info=True)
-
+            log.error(f"Error drawing item {i}: {e}", exc_info=True)
+    
+    # Add a count of boxes drawn
+    cv2.putText(output_image, f"Processed: {len(results)} boxes", 
+                (10, h-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    
     return output_image

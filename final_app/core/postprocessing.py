@@ -31,6 +31,8 @@ def format_cap_text(split_texts: dict) -> dict:
     teks_atas_processed = teks_atas_raw_input.replace(" ", "").upper()
     teks_bawah_processed = teks_bawah_raw_input.replace(" ", "").upper()
 
+    # print("TEKS ATASSSSS ",teks_atas_processed)
+
 
     if not teks_atas_processed:
         # Removed raw_top and raw_bottom
@@ -381,13 +383,16 @@ POST_PROCESSING_FUNCTIONS = {
     "SOYJOY": format_soyjoy_text, # Add SOYJOY function here
 }
 
-def apply_post_processing(category: str, split_texts: dict) -> dict:
+def apply_post_processing(category: str, split_texts) -> dict:
+    # print("KATEGORIII ",category)
     """Applies the appropriate post-processing function based on the category."""
     if category in POST_PROCESSING_FUNCTIONS:
         formatter = POST_PROCESSING_FUNCTIONS[category]
         log.info(f"Applying post-processing for category: {category}")
+        # print("KATEGORIII ",category)
         return formatter(split_texts)
     else:
+        # print("FAILEDDDD")
         msg = f"No post-processing function defined for category: {category}"
         log.warning(f"{msg}. Returning raw split text.")
         # Return a consistent dictionary format even if no processing is done
