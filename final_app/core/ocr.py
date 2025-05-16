@@ -133,54 +133,78 @@ def perform_cap_ocr_yolo(image: np.ndarray) -> list:
 
         formatted_results = []
 
-        # Process YOLO results
         if results:
             yolo_result_obj = results[0]
             boxes = yolo_result_obj.boxes
             if boxes:
+                # Convert all boxes to a list of dictionaries for easier processing
+                all_detections = []
                 for box in boxes:
-                    # Get bounding box coordinates [x1, y1, x2, y2]
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-
-                    # Get confidence
-                    confidence = float(box.conf[0].item())
-
-                    # Get class name (character)
                     class_id = int(box.cls[0].item())
+                    confidence = float(box.conf[0].item())
+                    
                     if class_id < len(yolo_result_obj.names):
                         char = yolo_result_obj.names[class_id]
                     else:
-                        log.warning(f"Detected class_id {class_id} is out of bounds for model names.")
-                        char = "?"
-
-                    # Create both box and bbox formats for consistency
-                    simple_box = [x1, y1, x2, y2]
-                    polygon_bbox = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]  # Convert to polygon format
+                        continue  # Skip invalid class IDs
                     
-                    formatted_results.append({
-                        'box': simple_box,
-                        'bbox': polygon_bbox,  # Add polygon format for drawing
-                        'text': char, 
+                    all_detections.append({
+                        'box': [x1, y1, x2, y2],
+                        'class_id': class_id,
+                        'char': char,
                         'confidence': confidence
                     })
-                    log.debug(f"CAP YOLO OCR detected: '{char}' at box={simple_box}, bbox={polygon_bbox}")
-            else:
-                log.info("No character boxes detected by CAP YOLO model in this image.")
-        else:
-            log.info("CAP YOLO model returned no results for this image.")
-        # --- End of YOLO Implementation ---
 
-        # Note: Sorting is handled later in split_text_top_bottom by y then x coordinate
-        # If specific left-to-right sorting is needed *before* splitting, it could be done here:
-        # print("Formatted results before sorting: ", formatted_results)
+                # Sort by confidence (highest first)
+                all_detections.sort(key=lambda x: x['confidence'], reverse=True)
+
+                # Filter out overlapping detections, keeping only the highest confidence one
+                kept_detections = []
+                for detection in all_detections:
+                    should_keep = True
+                    for kept in kept_detections:
+                        iou = calculate_iou(detection['box'], kept['box'])
+                        if iou > 0.1:  # Very strict threshold for overlapping
+                            should_keep = False
+                            break
+                    
+                    if should_keep:
+                        kept_detections.append(detection)
+
+                # Format the results
+                for det in kept_detections:
+                    x1, y1, x2, y2 = det['box']
+                    formatted_results.append({
+                        'box': [x1, y1, x2, y2],
+                        'bbox': [[x1, y1], [x2, y1], [x2, y2], [x1, y2]],
+                        'text': det['char'],
+                        'confidence': det['confidence']
+                    })
+
+        # Sort results by x-coordinate for proper reading order
         formatted_results.sort(key=lambda det: det['box'][0])
-        # print("Formatted results after sorting: ", formatted_results)
-
-        log.info(f"CAP YOLO OCR finished. Found {len(formatted_results)} characters.")
+        log.info(f"CAP YOLO OCR finished. Found {len(formatted_results)} characters after filtering.")
         return formatted_results
+
     except Exception as e:
         log.error(f"Error during CAP YOLO OCR execution: {e}", exc_info=True)
         return []
+
+
+def calculate_iou(box1, box2):
+    """Calculate Intersection over Union between two boxes"""
+    x1 = max(box1[0], box2[0])
+    y1 = max(box1[1], box2[1])
+    x2 = min(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
+
+    intersection = max(0, x2 - x1) * max(0, y2 - y1)
+    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+    union = box1_area + box2_area - intersection
+
+    return intersection / union if union > 0 else 0
 
 
 # --- Text Splitting Logic ---
