@@ -76,7 +76,8 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
 
 // Add static file serving before the routes
 app.use('/public', express.static(path.join(__dirname, 'public')));
