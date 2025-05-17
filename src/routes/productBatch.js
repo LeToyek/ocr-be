@@ -13,5 +13,6 @@ router.get('/available', controller.getAvailableProductBatches);
 router.get('/:id', controller.getProductBatchById);
 router.put('/:id', controller.updateProductBatch);
 router.delete('/:id', controller.deleteProductBatch);
+router.post('/with-document', controller.createProductBatchWithDocument);
 
 module.exports = router;

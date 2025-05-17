@@ -166,3 +166,91 @@ exports.deleteProductBatch = async (req, res) => {
         response(req, res, { status: 500, message: "Failed to delete product batch." });
     }
 };
+
+// Create Product Batch and find/create associated Document
+exports.createProductBatchWithDocument = async (req, res) => {
+    try {
+        const { category_id, issued_date, top_text, bottom_text } = req.body;
+
+        // Validate required inputs
+        if (category_id === undefined || issued_date === undefined || top_text === undefined || bottom_text === undefined) {
+            return response(req, res, { status: 400, message: "category_id, issued_date, top_text, and bottom_text are required." });
+        }
+
+        // Ensure issued_date is in 'YYYY-MM-DD' format for database query
+        const formattedIssuedDate = moment(issued_date).format('YYYY-MM-DD');
+        if (!moment(formattedIssuedDate, 'YYYY-MM-DD', true).isValid()) {
+             return response(req, res, { status: 400, message: "Invalid issued_date format. Please use YYYY-MM-DD." });
+        }
+
+
+        // 1. Find existing document
+        let document = await documents.findOne({
+            where: {
+                category_id: category_id,
+                issued_date: formattedIssuedDate
+            }
+        });
+
+        let documentId;
+
+        if (document) {
+            // Document found, use its ID
+            documentId = document.id;
+            console.log(`Found existing document ID: ${documentId} for category ${category_id} and date ${formattedIssuedDate}`);
+        } else {
+            // Document not found, create a new one
+            console.log(`No document found for category ${category_id} and date ${formattedIssuedDate}. Creating new document.`);
+
+            // Find the highest document_number for this category to generate the next one
+            const latestDocument = await documents.findOne({
+                where: { category_id: category_id },
+                order: [['document_number', 'DESC']],
+                attributes: ['document_number']
+            });
+
+            let nextNumber = 1;
+            if (latestDocument && latestDocument.document_number) {
+                // Extract the number part (e.g., '003' from 'FR/QA/003')
+                const match = latestDocument.document_number.match(/\/(\d+)$/);
+                if (match && match[1]) {
+                    nextNumber = parseInt(match[1], 10) + 1;
+                }
+            }
+
+            // Format the new document number (e.g., FR/QA/004)
+            // Assuming the prefix is always 'FR/QA/' based on the image
+            const newDocumentNumber = `FR/QA/${String(nextNumber).padStart(3, '0')}`;
+            console.log(`Generated new document number: ${newDocumentNumber}`);
+
+            // Create the new document entry
+            const newDocument = await documents.create({
+                category_id: category_id,
+                issued_date: formattedIssuedDate,
+                document_number: newDocumentNumber
+            });
+            documentId = newDocument.id;
+            console.log(`Created new document with ID: ${documentId}`);
+        }
+
+        // 2. Create the product batch using the documentId
+        const newBatch = await product_batch.create({
+            document_id: documentId,
+            top_text: top_text,
+            bottom_text: bottom_text,
+            is_verified: false // Default to not verified
+        });
+
+        // Fetch the created batch with document info for the response
+        const createdBatchWithDoc = await product_batch.findByPk(newBatch.id, {
+             include: [{ model: documents, as: 'document', attributes: ['document_number', 'issued_date'] }]
+        });
+
+
+        response(req, res, { status: 201, data: createdBatchWithDoc, message: "Product batch and associated document processed successfully." });
+
+    } catch (error) {
+        console.error("Create Product Batch With Document Error:", error);
+        response(req, res, { status: 500, message: "Failed to process product batch and document." });
+    }
+};
